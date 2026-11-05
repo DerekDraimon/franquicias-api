@@ -6,6 +6,10 @@ build/
 .idea/
 *.iml
 .vscode/
+.classpath
+.project
+.settings/
+bin/
 .DS_Store
 
 .env
