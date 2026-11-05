@@ -13,7 +13,7 @@ Además de crear y modificar estos datos, la API debe responder cuál es el prod
 | Tema | Elección |
 |---|---|
 | Lenguaje | Java 21 |
-| Framework | Spring Boot 3 con WebFlux |
+| Framework | Spring Boot 4 con WebFlux |
 | Base de datos | MongoDB Atlas (driver reactivo de Spring Data) |
 | Build | Gradle (Groovy) con wrapper |
 | Contenedor | Docker |
