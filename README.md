@@ -6,4 +6,8 @@ Prueba técnica de Desarrollador Backend.
 
 ## Estado
 
-En construcción. La documentación de diseño y las instrucciones para ejecutar el proyecto se irán agregando a medida que avance.
+En construcción. Las instrucciones para ejecutar el proyecto se irán agregando a medida que avance.
+
+## Documentación
+
+- [Diseño de la solución](docs/diseno.md): modelo de datos, endpoints, arquitectura y decisiones tomadas.
