@@ -111,7 +111,7 @@ Reglas:
 ### Validaciones
 
 - `nombre` es obligatorio y no puede estar vacío.
-- `stock` no puede ser negativo.
+- `stock` no puede ser negativo. Al crear un producto es opcional; si no se envía, se crea con stock 0.
 - En el `PATCH` de producto debe venir al menos uno de los dos campos.
 
 Formato de error:

@@ -1,8 +1,11 @@
 package com.derek.franquicias.config;
 
 import com.derek.franquicias.domain.gateway.FranquiciaGateway;
+import com.derek.franquicias.domain.gateway.ProductoGateway;
 import com.derek.franquicias.domain.gateway.SucursalGateway;
 import com.derek.franquicias.domain.usecase.FranquiciaUseCase;
+import com.derek.franquicias.domain.usecase.MayorStockUseCase;
+import com.derek.franquicias.domain.usecase.ProductoUseCase;
 import com.derek.franquicias.domain.usecase.SucursalUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,5 +23,17 @@ public class UseCaseConfig {
     @Bean
     public SucursalUseCase sucursalUseCase(SucursalGateway sucursalGateway, FranquiciaGateway franquiciaGateway) {
         return new SucursalUseCase(sucursalGateway, franquiciaGateway);
+    }
+
+    @Bean
+    public ProductoUseCase productoUseCase(ProductoGateway productoGateway, SucursalGateway sucursalGateway) {
+        return new ProductoUseCase(productoGateway, sucursalGateway);
+    }
+
+    @Bean
+    public MayorStockUseCase mayorStockUseCase(FranquiciaGateway franquiciaGateway,
+                                               SucursalGateway sucursalGateway,
+                                               ProductoGateway productoGateway) {
+        return new MayorStockUseCase(franquiciaGateway, sucursalGateway, productoGateway);
     }
 }
