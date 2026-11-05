@@ -129,7 +129,7 @@ com.derek.franquicias
 ├── domain
 │   ├── model        Franquicia, Sucursal, Producto, ProductoMayorStock
 │   ├── gateway      interfaces que el dominio necesita para guardar y consultar datos
-│   ├── usecase      FranquiciaUseCase, SucursalUseCase, ProductoUseCase
+│   ├── usecase      FranquiciaUseCase, SucursalUseCase, ProductoUseCase, MayorStockUseCase
 │   └── exception    excepciones del negocio
 ├── infrastructure
 │   ├── entrypoint   controladores REST, DTOs y manejo de errores
@@ -146,7 +146,7 @@ Reglas:
 Decisiones para no complicar la estructura más de lo necesario:
 
 - Un solo módulo de Gradle en vez de un proyecto multimódulo.
-- Un caso de uso por entidad en vez de uno por cada acción.
+- Un caso de uso por entidad en vez de uno por cada acción. La consulta del producto con más stock va en su propio caso de uso porque usa las tres entidades.
 - Controladores con `@RestController` en vez de `RouterFunction`.
 
 ## 6. Despliegue
