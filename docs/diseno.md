@@ -20,7 +20,7 @@ Además de crear y modificar estos datos, la API debe responder cuál es el prod
 | Infraestructura | Terraform |
 | Nube | Google Cloud Run |
 
-**WebFlux:** la prueba valora la programación reactiva. Para que tenga sentido, toda la cadena debe ser no bloqueante, incluido el acceso a datos. Por eso no se usa JPA/JDBC.
+**WebFlux:** atiende las peticiones de forma no bloqueante. Mientras espera la respuesta de la base de datos, el hilo queda libre para atender otras solicitudes, así que con pocos hilos se pueden manejar muchas peticiones concurrentes. Para aprovechar esto, el acceso a datos también tiene que ser no bloqueante; por eso se usa el driver reactivo de MongoDB y no JPA/JDBC.
 
 **MongoDB Atlas:** tiene soporte reactivo completo en Spring Data, ofrece un plan gratuito en la nube y cuenta con proveedor oficial de Terraform. Se evaluaron MySQL/Postgres con R2DBC, pero implican más código manual para las relaciones.
 
