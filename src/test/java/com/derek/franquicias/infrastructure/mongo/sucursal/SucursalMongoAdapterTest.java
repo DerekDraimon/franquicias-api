@@ -7,17 +7,16 @@ import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
-import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mongodb.MongoDBContainer;
 import reactor.test.StepVerifier;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataMongoTest
 @Testcontainers
@@ -60,9 +59,12 @@ class SucursalMongoAdapterTest {
     void creaElIndicePorFranquicia() {
         adapter.guardar(new Sucursal(null, "Centro", "f1")).block();
 
-        List<IndexInfo> indices = mongoTemplate.indexOps(SucursalDocument.class)
-                .getIndexInfo().collectList().block();
-
-        assertTrue(indices.stream().anyMatch(indice -> indice.isIndexForFields(List.of("franquiciaId"))));
+        // Spring Data crea los indices de forma asincrona: se reintenta hasta que aparezca.
+        StepVerifier.create(mongoTemplate.indexOps(SucursalDocument.class).getIndexInfo()
+                        .filter(indice -> indice.isIndexForFields(List.of("franquiciaId")))
+                        .next()
+                        .repeatWhenEmpty(intentos -> intentos.take(20).delayElements(Duration.ofMillis(250))))
+                .expectNextCount(1)
+                .verifyComplete();
     }
 }

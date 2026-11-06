@@ -7,17 +7,16 @@ import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
-import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mongodb.MongoDBContainer;
 import reactor.test.StepVerifier;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataMongoTest
 @Testcontainers
@@ -72,6 +71,18 @@ class ProductoMongoAdapterTest {
     }
 
     @Test
+    void buscarPorSucursalDevuelveSoloLosProductosDeEsaSucursal() {
+        String sucursalId = nuevaSucursal();
+        adapter.guardar(new Producto(null, "Pizza", 10, sucursalId)).block();
+        adapter.guardar(new Producto(null, "Gaseosa", 5, sucursalId)).block();
+        adapter.guardar(new Producto(null, "De otra sucursal", 1, nuevaSucursal())).block();
+
+        StepVerifier.create(adapter.buscarPorSucursal(sucursalId).map(Producto::nombre).sort())
+                .expectNext("Gaseosa", "Pizza")
+                .verifyComplete();
+    }
+
+    @Test
     void buscarMayorStockEnUnaSucursalSinProductosDevuelveVacio() {
         StepVerifier.create(adapter.buscarMayorStockDeSucursal(nuevaSucursal()))
                 .verifyComplete();
@@ -81,9 +92,12 @@ class ProductoMongoAdapterTest {
     void creaElIndicePorSucursalYStock() {
         adapter.guardar(new Producto(null, "Pizza", 10, "s1")).block();
 
-        List<IndexInfo> indices = mongoTemplate.indexOps(ProductoDocument.class)
-                .getIndexInfo().collectList().block();
-
-        assertTrue(indices.stream().anyMatch(indice -> indice.isIndexForFields(List.of("sucursalId", "stock"))));
+        // Spring Data crea los indices de forma asincrona: se reintenta hasta que aparezca.
+        StepVerifier.create(mongoTemplate.indexOps(ProductoDocument.class).getIndexInfo()
+                        .filter(indice -> indice.isIndexForFields(List.of("sucursalId", "stock")))
+                        .next()
+                        .repeatWhenEmpty(intentos -> intentos.take(20).delayElements(Duration.ofMillis(250))))
+                .expectNextCount(1)
+                .verifyComplete();
     }
 }

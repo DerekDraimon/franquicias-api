@@ -3,6 +3,7 @@ package com.derek.franquicias.domain.usecase;
 import com.derek.franquicias.domain.exception.RecursoNoEncontradoException;
 import com.derek.franquicias.domain.gateway.FranquiciaGateway;
 import com.derek.franquicias.domain.model.Franquicia;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class FranquiciaUseCase {
@@ -18,6 +19,10 @@ public class FranquiciaUseCase {
         // en lugar de lanzarse antes de que exista el flujo.
         return Mono.fromCallable(() -> new Franquicia(null, nombre))
                 .flatMap(franquiciaGateway::guardar);
+    }
+
+    public Flux<Franquicia> listar() {
+        return franquiciaGateway.listar();
     }
 
     public Mono<Franquicia> renombrar(String id, String nuevoNombre) {

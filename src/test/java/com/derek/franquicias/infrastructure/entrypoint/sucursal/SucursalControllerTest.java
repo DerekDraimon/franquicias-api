@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static org.mockito.Mockito.when;
@@ -34,6 +35,20 @@ class SucursalControllerTest {
                 .jsonPath("$.id").isEqualTo("s1")
                 .jsonPath("$.nombre").isEqualTo("Sede Centro")
                 .jsonPath("$.franquiciaId").isEqualTo("f1");
+    }
+
+    @Test
+    void listarDevuelve200ConLasSucursalesDeLaFranquicia() {
+        when(sucursalUseCase.listarPorFranquicia("f1"))
+                .thenReturn(Flux.just(new Sucursal("s1", "Centro", "f1"), new Sucursal("s2", "Norte", "f1")));
+
+        webTestClient.get().uri("/api/franquicias/f1/sucursales")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.length()").isEqualTo(2)
+                .jsonPath("$[1].nombre").isEqualTo("Norte")
+                .jsonPath("$[1].franquiciaId").isEqualTo("f1");
     }
 
     @Test

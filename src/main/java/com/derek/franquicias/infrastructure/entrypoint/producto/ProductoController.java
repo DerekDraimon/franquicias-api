@@ -34,6 +34,12 @@ public class ProductoController {
                 .map(ProductoResponse::desde);
     }
 
+    @GetMapping("/sucursales/{sucursalId}/productos")
+    public Flux<ProductoResponse> listar(@PathVariable String sucursalId) {
+        return productoUseCase.listarPorSucursal(sucursalId)
+                .map(ProductoResponse::desde);
+    }
+
     @PatchMapping("/productos/{id}")
     public Mono<ProductoResponse> modificar(@PathVariable String id, @RequestBody ModificarProductoRequest request) {
         return productoUseCase.modificar(id, request.nombre(), request.stock())
