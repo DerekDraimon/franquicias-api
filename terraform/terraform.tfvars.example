@@ -1,2 +1,3 @@
 # Copiar como terraform.tfvars (ese archivo esta en .gitignore) y completar.
-atlas_org_id = "<ID de la organizacion de Atlas>"
+atlas_org_id   = "<ID de la organizacion de Atlas>"
+gcp_project_id = "<ID del proyecto de Google Cloud>"
