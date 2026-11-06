@@ -10,7 +10,17 @@ terraform {
       source  = "hashicorp/random"
       version = "~> 3.6"
     }
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 6.0"
+    }
   }
+}
+
+# Usa las credenciales de "gcloud auth application-default login".
+provider "google" {
+  project = var.gcp_project_id
+  region  = var.gcp_region
 }
 
 # Las credenciales se leen de variables de entorno, nunca del codigo:
