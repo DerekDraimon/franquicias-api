@@ -6,6 +6,7 @@ import com.derek.franquicias.domain.gateway.FranquiciaGateway;
 import com.derek.franquicias.domain.model.Franquicia;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -54,6 +55,17 @@ class FranquiciaUseCaseTest {
 
         StepVerifier.create(useCase.renombrar("f1", "Don Mario Express"))
                 .expectNext(new Franquicia("f1", "Don Mario Express"))
+                .verifyComplete();
+    }
+
+    @Test
+    void listarDevuelveTodasLasFranquicias() {
+        when(franquiciaGateway.listar())
+                .thenReturn(Flux.just(new Franquicia("f1", "Don Mario"), new Franquicia("f2", "Otra")));
+
+        StepVerifier.create(useCase.listar())
+                .expectNext(new Franquicia("f1", "Don Mario"))
+                .expectNext(new Franquicia("f2", "Otra"))
                 .verifyComplete();
     }
 

@@ -47,6 +47,16 @@ class FranquiciaMongoAdapterTest {
     }
 
     @Test
+    void listarIncluyeLasFranquiciasGuardadas() {
+        String nombre = "Franquicia " + java.util.UUID.randomUUID();
+        adapter.guardar(new Franquicia(null, nombre)).block();
+
+        StepVerifier.create(adapter.listar().map(Franquicia::nombre).filter(nombre::equals))
+                .expectNext(nombre)
+                .verifyComplete();
+    }
+
+    @Test
     void buscarUnIdQueNoExisteDevuelveVacio() {
         StepVerifier.create(adapter.buscarPorId("no-existe"))
                 .verifyComplete();

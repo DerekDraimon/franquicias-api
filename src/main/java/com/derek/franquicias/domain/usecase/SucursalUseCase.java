@@ -4,6 +4,7 @@ import com.derek.franquicias.domain.exception.RecursoNoEncontradoException;
 import com.derek.franquicias.domain.gateway.FranquiciaGateway;
 import com.derek.franquicias.domain.gateway.SucursalGateway;
 import com.derek.franquicias.domain.model.Sucursal;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class SucursalUseCase {
@@ -21,6 +22,13 @@ public class SucursalUseCase {
                 .switchIfEmpty(Mono.error(
                         new RecursoNoEncontradoException("No existe la franquicia con id " + franquiciaId)))
                 .flatMap(franquicia -> sucursalGateway.guardar(new Sucursal(null, nombre, franquicia.id())));
+    }
+
+    public Flux<Sucursal> listarPorFranquicia(String franquiciaId) {
+        return franquiciaGateway.buscarPorId(franquiciaId)
+                .switchIfEmpty(Mono.error(
+                        new RecursoNoEncontradoException("No existe la franquicia con id " + franquiciaId)))
+                .flatMapMany(franquicia -> sucursalGateway.buscarPorFranquicia(franquicia.id()));
     }
 
     public Mono<Sucursal> renombrar(String id, String nuevoNombre) {

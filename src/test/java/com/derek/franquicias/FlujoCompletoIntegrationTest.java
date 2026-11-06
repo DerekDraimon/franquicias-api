@@ -83,6 +83,38 @@ class FlujoCompletoIntegrationTest {
     }
 
     @Test
+    void listarFranquiciasSucursalesYProductos() {
+        String franquicia = crear("/api/franquicias", "{\"nombre\": \"Para listar\"}");
+        String sucursal = crear("/api/franquicias/" + franquicia + "/sucursales", "{\"nombre\": \"Centro\"}");
+        crear("/api/sucursales/" + sucursal + "/productos", "{\"nombre\": \"Pizza\", \"stock\": 10}");
+        crear("/api/sucursales/" + sucursal + "/productos", "{\"nombre\": \"Gaseosa\", \"stock\": 3}");
+
+        webTestClient.get().uri("/api/franquicias")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$[?(@.id == '" + franquicia + "')].nombre").isEqualTo("Para listar");
+
+        webTestClient.get().uri("/api/franquicias/" + franquicia + "/sucursales")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.length()").isEqualTo(1)
+                .jsonPath("$[0].nombre").isEqualTo("Centro");
+
+        webTestClient.get().uri("/api/sucursales/" + sucursal + "/productos")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.length()").isEqualTo(2);
+
+        webTestClient.get().uri("/api/sucursales/no-existe/productos")
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody().jsonPath("$.codigo").isEqualTo(404);
+    }
+
+    @Test
     void crearEnUnaFranquiciaQueNoExisteDevuelve404() {
         webTestClient.post().uri("/api/franquicias/no-existe/sucursales")
                 .contentType(MediaType.APPLICATION_JSON)

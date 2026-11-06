@@ -3,6 +3,7 @@ package com.derek.franquicias.infrastructure.entrypoint.sucursal;
 import com.derek.franquicias.domain.usecase.SucursalUseCase;
 import com.derek.franquicias.infrastructure.entrypoint.NombreRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -26,6 +28,12 @@ public class SucursalController {
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<SucursalResponse> crear(@PathVariable String franquiciaId, @RequestBody NombreRequest request) {
         return sucursalUseCase.crear(franquiciaId, request.nombre())
+                .map(SucursalResponse::desde);
+    }
+
+    @GetMapping("/franquicias/{franquiciaId}/sucursales")
+    public Flux<SucursalResponse> listar(@PathVariable String franquiciaId) {
+        return sucursalUseCase.listarPorFranquicia(franquiciaId)
                 .map(SucursalResponse::desde);
     }
 
