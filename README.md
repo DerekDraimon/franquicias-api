@@ -4,6 +4,12 @@ API REST para administrar franquicias, sus sucursales y los productos de cada su
 
 Construida con Java 21, Spring Boot 4 (WebFlux) y MongoDB, siguiendo Clean Architecture.
 
+**API desplegada:** https://franquicias-api-6cubf5m5aa-uc.a.run.app
+
+```bash
+curl https://franquicias-api-6cubf5m5aa-uc.a.run.app/api/franquicias/6aee060fffb64b61679458ab/productos/mayor-stock
+```
+
 ## Contenido
 
 - [Ejecutar con Docker](#ejecutar-con-docker)
@@ -11,6 +17,7 @@ Construida con Java 21, Spring Boot 4 (WebFlux) y MongoDB, siguiendo Clean Archi
 - [Tests](#tests)
 - [Endpoints](#endpoints)
 - [Diseño de la solución](#diseño-de-la-solución)
+- [Despliegue en la nube](#despliegue-en-la-nube)
 - [Flujo de trabajo con Git](#flujo-de-trabajo-con-git)
 
 ## Ejecutar con Docker
@@ -231,6 +238,71 @@ Para no complicar la estructura más de lo necesario:
 - Un solo módulo de Gradle en vez de un proyecto multimódulo.
 - Un caso de uso por entidad en vez de uno por cada acción. La consulta del producto con más stock va en su propio caso de uso porque usa las tres entidades.
 - Controladores con `@RestController` en vez de `RouterFunction`.
+
+## Despliegue en la nube
+
+Toda la infraestructura se crea con Terraform, en la carpeta [`terraform/`](terraform).
+
+```
+               Google Cloud (us-central1)                    MongoDB Atlas
+  ┌────────────────────────────────────────────┐     ┌─────────────────────────┐
+  │  Artifact Registry ──imagen──► Cloud Run ──┼────►│  cluster M0 (GCP,       │
+  │                                   ▲        │     │  CENTRAL_US)            │
+  │  Secret Manager ──MONGODB_URI─────┘        │     └─────────────────────────┘
+  └────────────────────────────────────────────┘
+```
+
+| Archivo | Qué crea |
+|---|---|
+| `atlas.tf` | proyecto y cluster gratuito de Atlas, usuario de la base con contraseña generada y lista de acceso |
+| `cloud_run.tf` | APIs de Google Cloud, repositorio de imágenes, secreto con la URI de MongoDB, cuenta de servicio y el servicio de Cloud Run |
+
+Decisiones:
+
+- **La URI de MongoDB, que incluye la contraseña, se guarda en Secret Manager.** La genera Terraform y nunca se escribe en el repositorio ni en una variable de entorno visible en la consola.
+- **Cloud Run usa una cuenta de servicio propia** que solo puede leer ese secreto.
+- **Escala de 0 a 2 instancias**: sin tráfico no hay instancias corriendo.
+- **Atlas permite conexiones desde cualquier IP** porque Cloud Run no tiene una IP de salida fija. El acceso queda protegido por usuario y contraseña. Para restringirlo habría que usar un conector VPC con Cloud NAT o Private Service Connect.
+
+### Cómo desplegar
+
+Requisitos: Terraform, Google Cloud CLI, Docker, un proyecto de Google Cloud con facturación activa y una service account de Atlas con rol *Organization Project Creator*.
+
+1. Credenciales (no se guardan en ningún archivo):
+
+   ```bash
+   gcloud auth application-default login
+   export MONGODB_ATLAS_CLIENT_ID="..."
+   export MONGODB_ATLAS_CLIENT_SECRET="..."
+   ```
+
+2. Variables: copiar `terraform/terraform.tfvars.example` como `terraform/terraform.tfvars` y completar el id de la organización de Atlas y el id del proyecto de Google Cloud.
+
+3. Crear la base de datos, el repositorio de imágenes y el secreto:
+
+   ```bash
+   cd terraform
+   terraform init
+   terraform apply
+   ```
+
+4. Construir y publicar la imagen:
+
+   ```bash
+   gcloud auth configure-docker us-central1-docker.pkg.dev
+   docker build -t us-central1-docker.pkg.dev/<proyecto>/franquicias/api:1.0.0 ..
+   docker push us-central1-docker.pkg.dev/<proyecto>/franquicias/api:1.0.0
+   ```
+
+5. Agregar `imagen = "us-central1-docker.pkg.dev/<proyecto>/franquicias/api:1.0.0"` a `terraform.tfvars` y volver a aplicar. Esto crea el servicio de Cloud Run y muestra su URL en el output `url_api`:
+
+   ```bash
+   terraform apply
+   ```
+
+El servicio se crea en un segundo paso porque Cloud Run necesita que la imagen ya exista en el repositorio, y el repositorio también lo crea Terraform.
+
+Para borrar todo: `terraform destroy`.
 
 ## Flujo de trabajo con Git
 
