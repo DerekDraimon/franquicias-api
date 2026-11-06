@@ -61,6 +61,20 @@ class ProductoControllerTest {
     }
 
     @Test
+    void listarDevuelve200ConLosProductosDeLaSucursal() {
+        when(productoUseCase.listarPorSucursal("s1"))
+                .thenReturn(Flux.just(new Producto("p1", "Pizza", 10, "s1"), new Producto("p2", "Gaseosa", 5, "s1")));
+
+        webTestClient.get().uri("/api/sucursales/s1/productos")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.length()").isEqualTo(2)
+                .jsonPath("$[0].nombre").isEqualTo("Pizza")
+                .jsonPath("$[1].stock").isEqualTo(5);
+    }
+
+    @Test
     void modificarSoloElStockDevuelve200() {
         when(productoUseCase.modificar("p1", null, 50))
                 .thenReturn(Mono.just(new Producto("p1", "Pizza", 50, "s1")));

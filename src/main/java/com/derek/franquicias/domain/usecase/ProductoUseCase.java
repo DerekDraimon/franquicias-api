@@ -5,6 +5,7 @@ import com.derek.franquicias.domain.exception.RecursoNoEncontradoException;
 import com.derek.franquicias.domain.gateway.ProductoGateway;
 import com.derek.franquicias.domain.gateway.SucursalGateway;
 import com.derek.franquicias.domain.model.Producto;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class ProductoUseCase {
@@ -22,6 +23,13 @@ public class ProductoUseCase {
                 .switchIfEmpty(Mono.error(
                         new RecursoNoEncontradoException("No existe la sucursal con id " + sucursalId)))
                 .flatMap(sucursal -> productoGateway.guardar(new Producto(null, nombre, stock, sucursal.id())));
+    }
+
+    public Flux<Producto> listarPorSucursal(String sucursalId) {
+        return sucursalGateway.buscarPorId(sucursalId)
+                .switchIfEmpty(Mono.error(
+                        new RecursoNoEncontradoException("No existe la sucursal con id " + sucursalId)))
+                .flatMapMany(sucursal -> productoGateway.buscarPorSucursal(sucursal.id()));
     }
 
     // nuevoNombre y nuevoStock pueden venir en null: solo se cambia lo que llega.

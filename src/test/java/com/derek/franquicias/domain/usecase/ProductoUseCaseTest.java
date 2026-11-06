@@ -8,6 +8,7 @@ import com.derek.franquicias.domain.model.Producto;
 import com.derek.franquicias.domain.model.Sucursal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -75,6 +76,32 @@ class ProductoUseCaseTest {
                 .verify();
 
         verify(productoGateway, never()).guardar(any());
+    }
+
+    // listar
+
+    @Test
+    void listarPorSucursalDevuelveSusProductos() {
+        when(sucursalGateway.buscarPorId("s1"))
+                .thenReturn(Mono.just(new Sucursal("s1", "Centro", "f1")));
+        when(productoGateway.buscarPorSucursal("s1"))
+                .thenReturn(Flux.just(new Producto("p1", "Pizza", 10, "s1"), new Producto("p2", "Gaseosa", 5, "s1")));
+
+        StepVerifier.create(useCase.listarPorSucursal("s1"))
+                .expectNext(new Producto("p1", "Pizza", 10, "s1"))
+                .expectNext(new Producto("p2", "Gaseosa", 5, "s1"))
+                .verifyComplete();
+    }
+
+    @Test
+    void listarPorUnaSucursalQueNoExisteDevuelveError() {
+        when(sucursalGateway.buscarPorId("s9")).thenReturn(Mono.empty());
+
+        StepVerifier.create(useCase.listarPorSucursal("s9"))
+                .expectError(RecursoNoEncontradoException.class)
+                .verify();
+
+        verify(productoGateway, never()).buscarPorSucursal(anyString());
     }
 
     // modificar

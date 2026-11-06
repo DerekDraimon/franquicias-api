@@ -3,6 +3,7 @@ package com.derek.franquicias.infrastructure.mongo.producto;
 import com.derek.franquicias.domain.gateway.ProductoGateway;
 import com.derek.franquicias.domain.model.Producto;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -23,6 +24,12 @@ public class ProductoMongoAdapter implements ProductoGateway {
     @Override
     public Mono<Producto> buscarPorId(String id) {
         return repository.findById(id)
+                .map(ProductoMapper::aDominio);
+    }
+
+    @Override
+    public Flux<Producto> buscarPorSucursal(String sucursalId) {
+        return repository.findBySucursalId(sucursalId)
                 .map(ProductoMapper::aDominio);
     }
 
